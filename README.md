@@ -23,7 +23,16 @@ Desenvolvido como skill do [Claude Code](https://claude.ai/code) — pode ser us
 git clone https://github.com/arturarruda-neo/busca-contatos-apollo-publico.git
 cd busca-contatos-apollo-publico
 pip install -r requirements.txt
+```
+
+**Mac/Linux/PowerShell:**
+```bash
 cp config/.env.example .env
+```
+
+**Windows (Prompt de Comando):**
+```cmd
+copy config\.env.example .env
 ```
 
 Edite `.env` e preencha sua chave Apollo:
@@ -36,7 +45,17 @@ A API key está em `app.apollo.io > Settings > Integrations > API`.
 
 ## Configuração do Google Sheets
 
-Autenticação via OAuth2 com gspread. Na primeira execução o navegador abre para você autorizar o acesso. Siga a [documentação do gspread](https://docs.gspread.org/en/latest/oauth2.html) para configurar as credenciais.
+Este projeto usa autenticação OAuth2 via [gspread](https://gspread.readthedocs.io). O processo exige criar credenciais no Google Cloud Console antes da primeira execução:
+
+1. Acesse o [Google Cloud Console](https://console.cloud.google.com) e crie um projeto (ou use um existente)
+2. Ative a **Google Sheets API** e a **Google Drive API** no projeto
+3. Em **APIs e serviços > Credenciais**, crie uma credencial do tipo **ID do cliente OAuth 2.0** (tipo: aplicativo de área de trabalho)
+4. Baixe o arquivo `credentials.json` gerado e salve em:
+   - **Linux/Mac:** `~/.config/gspread/credentials.json`
+   - **Windows:** `C:\Users\SEU_USUARIO\AppData\Roaming\gspread\credentials.json`
+5. Na primeira execução do script, o navegador abrirá automaticamente para você autorizar o acesso à sua conta Google
+
+Para mais detalhes, consulte a [documentação oficial do gspread](https://docs.gspread.org/en/latest/oauth2.html).
 
 ## Configuração das colunas e modo de busca
 

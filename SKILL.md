@@ -30,7 +30,8 @@ As letras de coluna sao definidas pelo usuario em `config/config.json` antes de 
 Verifique se existem no diretorio do projeto:
 - `.env` com `APOLLO_API_KEY` preenchida
 - `config/config.json` com as letras de coluna corretas para a planilha do usuario
-- gspread OAuth2 configurado (doc: https://docs.gspread.org/en/latest/oauth2.html)
+- gspread OAuth2 configurado — requer `credentials.json` do Google Cloud Console
+  (guia completo: https://docs.gspread.org/en/latest/oauth2.html e secao "Configuracao do Google Sheets" no README)
 
 Se `.env` nao existir:
 ```bash
@@ -121,5 +122,10 @@ O script exibe o relatorio automaticamente ao finalizar. Nao e necessaria nenhum
 
 ## Nota sobre creditos Apollo
 
-O plano Free tem 50 creditos de exportacao por mes. Cada chamada de People Match consome 1 credito.
-Monitorar em: `app.apollo.io > Settings > Credits`
+O consumo de creditos por chamada varia conforme o modo de busca:
+
+- **`email_only`:** menor consumo por contato
+- **`phone_only`:** consumo intermediario por contato
+- **`both`:** maior consumo por contato
+
+O plano Free tem 50 creditos de exportacao por mes. Consulte os valores exatos em `app.apollo.io > Settings > Credits` ou na pagina de precos da Apollo (https://www.apollo.io/pricing), pois as taxas podem variar por plano.

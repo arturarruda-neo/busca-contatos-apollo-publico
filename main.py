@@ -12,12 +12,31 @@ from modules.reporter import print_report
 load_dotenv()
 
 VALID_MODES = ("email_only", "phone_only", "both")
+REQUIRED_COLUMN_KEYS = ("linkedin", "email", "phone")
 
 
 def load_config():
     config_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
-    with open(config_path, "r", encoding="utf-8") as f:
-        return json.load(f)
+    try:
+        with open(config_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        print(f"[ERRO] config/config.json nao encontrado. Verifique se o arquivo existe.")
+        sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"[ERRO] config/config.json tem JSON invalido: {e}")
+        sys.exit(1)
+
+
+def validate_config(config):
+    columns = config.get("columns")
+    if not isinstance(columns, dict):
+        print("[ERRO] config.json: campo 'columns' ausente ou invalido.")
+        sys.exit(1)
+    for key in REQUIRED_COLUMN_KEYS:
+        if key not in columns or not str(columns[key]).strip():
+            print(f"[ERRO] config.json: coluna '{key}' ausente ou vazia em 'columns'.")
+            sys.exit(1)
 
 
 def main():
@@ -28,14 +47,23 @@ def main():
     parser.add_argument("--limit", type=int, required=True, help="Maximo de contatos a processar")
     args = parser.parse_args()
 
+    if args.start_row < 1:
+        print("[ERRO] --start-row deve ser >= 1.")
+        sys.exit(1)
+    if args.limit < 1:
+        print("[ERRO] --limit deve ser >= 1.")
+        sys.exit(1)
+
     api_key = os.getenv("APOLLO_API_KEY")
     if not api_key:
-        print("[ERRO] APOLLO_API_KEY nao encontrada no arquivo .env")
+        print("[ERRO] APOLLO_API_KEY nao encontrada. Copie config/.env.example para .env e preencha a chave.")
         sys.exit(1)
 
     webhook_url = os.getenv("APOLLO_WEBHOOK_URL", "")
 
     config = load_config()
+    validate_config(config)
+
     col_linkedin = config["columns"]["linkedin"]
     col_phone = config["columns"]["phone"]
     col_email = config["columns"]["email"]
