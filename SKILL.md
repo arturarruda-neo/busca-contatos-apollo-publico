@@ -33,9 +33,15 @@ Verifique se existem no diretorio do projeto:
 - gspread OAuth2 configurado — requer `credentials.json` do Google Cloud Console
   (guia completo: https://docs.gspread.org/en/latest/oauth2.html e secao "Configuracao do Google Sheets" no README)
 
-Se `.env` nao existir:
+Se `.env` nao existir, criar a partir do exemplo:
+
+Mac/Linux/PowerShell:
 ```bash
 cp config/.env.example .env
+```
+Windows (Prompt de Comando):
+```cmd
+copy config\.env.example .env
 ```
 Orientar o usuario a editar `.env` e preencher `APOLLO_API_KEY` com a chave de `app.apollo.io > Settings > Integrations > API`.
 
@@ -92,11 +98,18 @@ Se o usuario informar "linha X ate linha Y", calcular limit = Y - start_row + 1.
 
 ## Passo 4 — Executar o script
 
+Antes de rodar, verificar qual comando Python esta disponivel no sistema do usuario:
+```bash
+python --version
+python3 --version
+```
+Usar o que responder sem erro. Em caso de duvida, tentar `python` primeiro; se falhar, tentar `python3`.
+
 ```bash
 python main.py --sheet-url "URL_DA_PLANILHA" --sheet-name "NOME_DA_ABA" --start-row LINHA --limit QUANTIDADE
 ```
 
-**Atencao:** Se for a primeira execucao do gspread neste ambiente, o navegador abrira para autenticacao Google — informe o usuario antes de rodar.
+**Atencao:** Se for a primeira execucao do gspread neste ambiente, o navegador abrira para autenticacao Google — informar o usuario antes de rodar.
 
 ---
 
@@ -114,6 +127,7 @@ O script exibe o relatorio automaticamente ao finalizar. Nao e necessaria nenhum
 | `SpreadsheetNotFound` | Verificar URL da planilha e permissao de acesso |
 | `WorksheetNotFound` | Nome da aba e case-sensitive — verificar exatamente |
 | `ModuleNotFoundError` | Rodar `pip install -r requirements.txt` |
+| `python: command not found` | Usar `python3` no lugar de `python` (Mac/Linux) |
 | Rate limit (429) | O script aguarda 60s automaticamente e retenta |
 | Erro HTTP 422 | API key nao esta no header — verificar `modules/apollo.py` |
 | Linhas ja preenchidas nao sao reprocessadas | A regra de skip bloqueia qualquer conteudo nas colunas de email ou telefone; para reprocessar, limpar as celulas antes de rodar |

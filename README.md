@@ -96,13 +96,21 @@ Use a letra da coluna da sua planilha (ex: `D`, `E`, `F`, `AA`...).
 
 ## Como rodar
 
+**Mac/Linux:**
 ```bash
-python main.py \
+python3 main.py \
   --sheet-url "https://docs.google.com/spreadsheets/d/SEU_ID/edit" \
   --sheet-name "NOME_DA_ABA" \
   --start-row LINHA_INICIAL \
   --limit QUANTIDADE
 ```
+
+**Windows:**
+```cmd
+python main.py --sheet-url "https://docs.google.com/spreadsheets/d/SEU_ID/edit" --sheet-name "NOME_DA_ABA" --start-row LINHA_INICIAL --limit QUANTIDADE
+```
+
+> Não sabe qual usar? Rode `python --version` e `python3 --version` no terminal — use o que responder sem erro.
 
 | Parâmetro | Descrição |
 |---|---|
@@ -113,9 +121,34 @@ python main.py \
 
 ## Uso como skill do Claude Code
 
-1. Copie o arquivo `SKILL.md` para a pasta de skills do seu projeto Claude Code (geralmente `.claude/skills/` ou o diretório raiz do projeto)
-2. No Claude Code, acione com `/busca-contatos-apollo`
-3. O Claude vai guiar você pela configuração das colunas e modo, coletar as informações da planilha, montar o comando e executar
+A skill funciona como um comando personalizado dentro do Claude Code. **Todo o processo deve ser executado com o Claude Code aberto na pasta deste projeto clonado.**
+
+### Instalação
+
+Crie o diretório de comandos e copie a skill para dentro dele:
+
+**Mac/Linux/PowerShell:**
+```bash
+mkdir -p .claude/commands
+cp SKILL.md .claude/commands/busca-contatos-apollo.md
+```
+
+**Windows (Prompt de Comando):**
+```cmd
+mkdir .claude\commands
+copy SKILL.md .claude\commands\busca-contatos-apollo.md
+```
+
+### Uso
+
+Abra o Claude Code **dentro da pasta do projeto**:
+```bash
+claude .
+```
+
+Acione com `/busca-contatos-apollo`. O Claude vai guiar você pela configuração das colunas e modo, coletar as informações da planilha, montar o comando e executar.
+
+> **Importante:** a skill edita `config/config.json` e executa `main.py` relativos à pasta do projeto. O Claude Code precisa estar aberto nessa pasta para funcionar corretamente.
 
 ## Créditos Apollo
 
