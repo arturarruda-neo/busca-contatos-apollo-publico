@@ -5,9 +5,9 @@ description: Use quando o usuario pedir para buscar emails e telefones de contat
 
 # Busca de Contatos — Apollo.io
 
-Automatiza o enriquecimento de contatos via Apollo.io People Enrichment, lendo URLs de LinkedIn de uma coluna configuravel de uma planilha Google Sheets e escrevendo os resultados nas colunas de E-mail e Telefone definidas pelo usuario.
+Automatiza o enriquecimento de contatos via Apollo.io People Enrichment, lendo URLs de LinkedIn de uma coluna configuravel de uma planilha Google Sheets e escrevendo os resultados nas colunas de E-mail e/ou Telefone definidas pelo usuario.
 
-**Nota:** A API Apollo nao retorna telefone de forma sincrona (exige webhook). Telefone sera sempre gravado como "N.A." — apenas email e retornado.
+**Nota sobre telefone:** A API Apollo retorna telefone de forma assincrona (requer webhook). Sem webhook configurado, o script ainda solicita o telefone e pode retornar dados publicos do perfil, mas a maioria dos casos vira vazio.
 
 ## Estrutura da planilha
 
@@ -17,7 +17,7 @@ A skill opera sobre tres colunas configuradas em `config/config.json`:
 |----------------------|----------|----------------------------------------------|
 | `linkedin`           | LinkedIn | **lido** — URL do perfil individual          |
 | `email`              | E-mail   | **escrito** — email encontrado ou "N.A."     |
-| `phone`              | Telefone | **escrito** — sempre "N.A." (ver nota acima) |
+| `phone`              | Telefone | **escrito** — telefone encontrado ou "N.A."  |
 
 As letras de coluna sao definidas pelo usuario em `config/config.json` antes de rodar (ex: `"linkedin": "C"`).
 
@@ -45,13 +45,21 @@ pip install -r requirements.txt
 
 ---
 
-## Passo 2 — Configurar colunas
+## Passo 2 — Configurar colunas e modo de busca
 
 Pergunte ao usuario:
 
 1. **Qual e a letra da coluna que contem as URLs de LinkedIn?** (ex: `A`, `B`, `C`...)
 2. **Qual e a letra da coluna onde deve ser gravado o E-mail?**
 3. **Qual e a letra da coluna onde deve ser gravado o Telefone?**
+4. **O que deseja buscar?**
+   - `email_only` — apenas e-mail (padrao, funciona sem configuracao extra)
+   - `phone_only` — apenas telefone (webhook recomendado para resultados completos)
+   - `both` — e-mail e telefone (webhook recomendado para resultados completos)
+
+Se o usuario escolher `phone_only` ou `both`, perguntar tambem:
+- **Possui uma URL de webhook configurada?** Se sim, pedir a URL e incluir em `.env` como `APOLLO_WEBHOOK_URL`.
+- Caso nao tenha webhook, avisar: *"Sem webhook, a Apollo pode retornar telefones publicos ja disponiveis no perfil, mas a maioria dos casos vira vazio."*
 
 Com as respostas, edite `config/config.json`:
 
@@ -61,7 +69,8 @@ Com as respostas, edite `config/config.json`:
     "linkedin": "LETRA_LINKEDIN",
     "email": "LETRA_EMAIL",
     "phone": "LETRA_TELEFONE"
-  }
+  },
+  "mode": "MODO_ESCOLHIDO"
 }
 ```
 

@@ -3,5 +3,6 @@
     "linkedin": "A",
     "email": "B",
     "phone": "C"
-  }
+  },
+  "mode": "email_only"
 }

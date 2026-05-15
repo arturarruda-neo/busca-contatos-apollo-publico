@@ -7,19 +7,29 @@ RATE_LIMIT_WAIT = 60           # seconds to wait on 429
 MAX_RETRIES = 3
 
 
-def enrich_by_linkedin(api_key: str, linkedin_url: str) -> dict:
+def enrich_by_linkedin(api_key: str, linkedin_url: str,
+                       mode: str = "email_only", webhook_url: str = "") -> dict:
     """
     Returns dict with keys: email, phone, status
-    status: 'found_email' | 'found_phone' | 'not_found'
+    status: 'found_email' | 'found_phone' | 'found_both' | 'not_found'
+
+    mode options:
+      'email_only'  — requests reveal_personal_emails (synchronous)
+      'phone_only'  — requests reveal_phone_number (async via webhook if configured)
+      'both'        — requests both (phone async via webhook if configured)
     """
     headers = {
         "X-Api-Key": api_key,
         "Content-Type": "application/json",
     }
-    payload = {
-        "linkedin_url": linkedin_url,
-        "reveal_personal_emails": True,
-    }
+    payload = {"linkedin_url": linkedin_url}
+
+    if mode in ("email_only", "both"):
+        payload["reveal_personal_emails"] = True
+    if mode in ("phone_only", "both"):
+        payload["reveal_phone_number"] = True
+        if webhook_url:
+            payload["webhook_url"] = webhook_url
 
     for attempt in range(MAX_RETRIES):
         try:
@@ -42,8 +52,10 @@ def enrich_by_linkedin(api_key: str, linkedin_url: str) -> dict:
             phones = person.get("phone_numbers") or []
             phone = phones[0].get("sanitized_number", "") if phones else ""
 
+            if email and phone:
+                return {"email": email, "phone": phone, "status": "found_both"}
             if email:
-                return {"email": email, "phone": phone or "N.A.", "status": "found_email"}
+                return {"email": email, "phone": "N.A.", "status": "found_email"}
             if phone:
                 return {"email": "N.A.", "phone": phone, "status": "found_phone"}
 

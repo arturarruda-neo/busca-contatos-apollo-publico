@@ -1,17 +1,15 @@
 # busca-contatos-apollo-publico
 
-Enriquece contatos via [Apollo.io People Enrichment](https://apolloio.github.io/apollo-api-docs/?shell#people-enrichment): lê URLs de LinkedIn de uma coluna configurável de uma planilha Google Sheets e preenche automaticamente as colunas de e-mail e telefone.
+Enriquece contatos via [Apollo.io People Enrichment](https://apolloio.github.io/apollo-api-docs/?shell#people-enrichment): lê URLs de LinkedIn de uma coluna configurável de uma planilha Google Sheets e preenche automaticamente as colunas de e-mail e/ou telefone.
 
 Desenvolvido como skill do [Claude Code](https://claude.ai/code) — pode ser usado tanto via linha de comando quanto acionado pelo Claude diretamente.
 
 ## O que faz
 
 - Lê a coluna de LinkedIn URLs configurada na sua planilha Google Sheets
-- Chama a API Apollo.io para buscar o e-mail de cada perfil
-- Escreve o resultado nas colunas de e-mail e telefone que você definir
+- Chama a API Apollo.io para buscar e-mail e/ou telefone de cada perfil
+- Escreve o resultado nas colunas que você definir
 - Pula linhas que já têm conteúdo nas colunas de saída (evita reprocessar)
-
-> **Limitação:** A API Apollo não retorna telefone de forma síncrona (exige webhook). O campo Telefone é sempre gravado como `N.A.`.
 
 ## Pré-requisitos
 
@@ -40,9 +38,9 @@ A API key está em `app.apollo.io > Settings > Integrations > API`.
 
 Autenticação via OAuth2 com gspread. Na primeira execução o navegador abre para você autorizar o acesso. Siga a [documentação do gspread](https://docs.gspread.org/en/latest/oauth2.html) para configurar as credenciais.
 
-## Configuração das colunas
+## Configuração das colunas e modo de busca
 
-**Antes de rodar**, edite `config/config.json` substituindo `A`, `B` e `C` pelas letras reais das colunas da sua planilha:
+**Antes de rodar**, edite `config/config.json`:
 
 ```json
 {
@@ -50,19 +48,32 @@ Autenticação via OAuth2 com gspread. Na primeira execução o navegador abre p
     "linkedin": "A",
     "email": "B",
     "phone": "C"
-  }
+  },
+  "mode": "email_only"
 }
 ```
 
 > Os valores `A`, `B`, `C` são apenas exemplos. Você **deve** trocá-los pelas letras correspondentes na sua planilha antes de executar o script.
 
+### Colunas
+
 | Chave       | Descrição                                                |
 |-------------|----------------------------------------------------------|
 | `linkedin`  | Coluna que contém as URLs de LinkedIn (lida pelo script) |
 | `email`     | Coluna onde o e-mail encontrado será gravado             |
-| `phone`     | Coluna onde o telefone será gravado (sempre `N.A.`)      |
+| `phone`     | Coluna onde o telefone encontrado será gravado           |
 
 Use a letra da coluna da sua planilha (ex: `D`, `E`, `F`, `AA`...).
+
+### Modos de busca
+
+| Modo          | O que busca             | Requisito extra          |
+|---------------|-------------------------|--------------------------|
+| `email_only`  | Apenas e-mail           | Nenhum                   |
+| `phone_only`  | Apenas telefone         | Webhook recomendado¹     |
+| `both`        | E-mail e telefone       | Webhook recomendado¹     |
+
+> ¹ **Sobre o webhook:** A API Apollo retorna telefone de forma assíncrona — ela envia o resultado para uma URL de webhook que você precisa configurar. Sem webhook, o script ainda solicita o telefone e pode retornar dados públicos já presentes no perfil, mas a maioria dos casos virá vazio. Para configurar, adicione `APOLLO_WEBHOOK_URL=sua_url` no `.env`.
 
 ## Como rodar
 
@@ -85,16 +96,14 @@ python main.py \
 
 1. Copie o arquivo `SKILL.md` para a pasta de skills do seu projeto Claude Code (geralmente `.claude/skills/` ou o diretório raiz do projeto)
 2. No Claude Code, acione com `/busca-contatos-apollo`
-3. O Claude vai guiar você pela configuração das colunas, coletar as informações da planilha, montar o comando e executar
+3. O Claude vai guiar você pela configuração das colunas e modo, coletar as informações da planilha, montar o comando e executar
 
 ## Créditos Apollo
 
-O consumo de créditos por chamada varia conforme o tipo de busca:
+O consumo de créditos por chamada varia conforme o modo de busca:
 
-- **Somente e-mail:** menor consumo por contato
-- **E-mail + telefone:** consumo maior por contato
-- **Somente telefone:** consumo intermediário por contato
-
-> Este script busca **apenas e-mail** (`reveal_personal_emails: True`). Telefone exige webhook e é sempre gravado como `N.A.`, portanto não consome créditos adicionais de telefone.
+- **`email_only`:** menor consumo por contato
+- **`phone_only`:** consumo intermediário por contato
+- **`both`:** maior consumo por contato
 
 O plano Free tem 50 créditos de exportação por mês. Consulte os valores exatos em `app.apollo.io > Settings > Credits` ou na [página de preços da Apollo](https://www.apollo.io/pricing), pois as taxas podem variar por plano.

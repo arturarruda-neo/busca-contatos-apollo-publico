@@ -11,6 +11,8 @@ from modules.reporter import print_report
 
 load_dotenv()
 
+VALID_MODES = ("email_only", "phone_only", "both")
+
 
 def load_config():
     config_path = os.path.join(os.path.dirname(__file__), "config", "config.json")
@@ -31,11 +33,23 @@ def main():
         print("[ERRO] APOLLO_API_KEY nao encontrada no arquivo .env")
         sys.exit(1)
 
+    webhook_url = os.getenv("APOLLO_WEBHOOK_URL", "")
+
     config = load_config()
     col_linkedin = config["columns"]["linkedin"]
     col_phone = config["columns"]["phone"]
     col_email = config["columns"]["email"]
+    mode = config.get("mode", "email_only")
 
+    if mode not in VALID_MODES:
+        print(f"[ERRO] Modo invalido em config.json: '{mode}'. Use: {', '.join(VALID_MODES)}")
+        sys.exit(1)
+
+    if mode in ("phone_only", "both") and not webhook_url:
+        print(f"[AVISO] Modo '{mode}' selecionado sem APOLLO_WEBHOOK_URL configurado.")
+        print("        Telefones so serao retornados se ja estiverem publicos no perfil Apollo.")
+
+    print(f"Modo: {mode}")
     print(f"Conectando a planilha '{args.sheet_name}'...")
     sheet = get_sheet(args.sheet_url, args.sheet_name)
 
@@ -56,13 +70,14 @@ def main():
         display_url = linkedin_url[:70] + ("..." if len(linkedin_url) > 70 else "")
         print(f"[{i}/{len(pending)}] Linha {row_num}: {display_url}")
 
-        result = enrich_by_linkedin(api_key, linkedin_url)
+        result = enrich_by_linkedin(api_key, linkedin_url, mode, webhook_url)
         update_contact(sheet, row_num, col_phone, col_email, result["phone"], result["email"])
 
         label = {
+            "found_both":  "Email e telefone encontrados",
             "found_email": "Email encontrado",
             "found_phone": "Telefone encontrado",
-            "not_found": "Nao encontrado",
+            "not_found":   "Nao encontrado",
         }.get(result["status"], "?")
 
         print(f"  -> {label}: email={result['email']}, tel={result['phone']}")
