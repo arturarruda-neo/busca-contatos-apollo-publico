@@ -5,21 +5,23 @@ description: Use quando o usuario pedir para buscar emails e telefones de contat
 
 # Busca de Contatos — Apollo.io
 
-Automatiza o enriquecimento de contatos via Apollo.io People Enrichment, lendo URLs de LinkedIn da coluna O de uma planilha Google Sheets e escrevendo os resultados nas colunas M (Telefone) e N (E-mail).
+Automatiza o enriquecimento de contatos via Apollo.io People Enrichment, lendo URLs de LinkedIn de uma coluna configuravel de uma planilha Google Sheets e escrevendo os resultados nas colunas de E-mail e Telefone definidas pelo usuario.
 
 **Nota:** A API Apollo nao retorna telefone de forma sincrona (exige webhook). Telefone sera sempre gravado como "N.A." — apenas email e retornado.
 
-## Estrutura fixa da planilha
+## Estrutura da planilha
 
-| Col | Campo     | Papel nesta skill                          |
-|-----|-----------|--------------------------------------------|
-| M   | Telefone  | **escrito** — sempre "N.A." (ver nota acima) |
-| N   | E-mail    | **escrito** — email encontrado ou "N.A."    |
-| O   | LinkedIn  | **lido** — URL do perfil individual         |
+A skill opera sobre tres colunas configuradas em `config/config.json`:
 
-Linhas 1-4 sao cabecalho. Dados a partir da linha 5.
+| Chave em config.json | Campo    | Papel nesta skill                            |
+|----------------------|----------|----------------------------------------------|
+| `linkedin`           | LinkedIn | **lido** — URL do perfil individual          |
+| `email`              | E-mail   | **escrito** — email encontrado ou "N.A."     |
+| `phone`              | Telefone | **escrito** — sempre "N.A." (ver nota acima) |
 
-**Regra de skip (Opcao A):** Se a coluna M **ou** a coluna N ja tiver qualquer conteudo (inclusive "N.A."), a linha e pulada.
+As letras de coluna sao definidas pelo usuario em `config/config.json` antes de rodar (ex: `"linkedin": "C"`).
+
+**Regra de skip:** Se as colunas de e-mail **ou** telefone ja tiverem qualquer conteudo (inclusive "N.A."), a linha e pulada. Para reprocessar, limpar as celulas primeiro.
 
 ---
 
@@ -27,8 +29,8 @@ Linhas 1-4 sao cabecalho. Dados a partir da linha 5.
 
 Verifique se existem no diretorio do projeto:
 - `.env` com `APOLLO_API_KEY` preenchida
-- `config.json` presente (ja configurado para as colunas M, N, O)
-- gspread OAuth2 ja configurado (mesmo setup do busca-linkedin)
+- `config/config.json` com as letras de coluna corretas para a planilha do usuario
+- gspread OAuth2 configurado (doc: https://docs.gspread.org/en/latest/oauth2.html)
 
 Se `.env` nao existir:
 ```bash
@@ -43,20 +45,42 @@ pip install -r requirements.txt
 
 ---
 
-## Passo 2 — Coletar informacoes do usuario
+## Passo 2 — Configurar colunas
+
+Pergunte ao usuario:
+
+1. **Qual e a letra da coluna que contem as URLs de LinkedIn?** (ex: `A`, `B`, `C`...)
+2. **Qual e a letra da coluna onde deve ser gravado o E-mail?**
+3. **Qual e a letra da coluna onde deve ser gravado o Telefone?**
+
+Com as respostas, edite `config/config.json`:
+
+```json
+{
+  "columns": {
+    "linkedin": "LETRA_LINKEDIN",
+    "email": "LETRA_EMAIL",
+    "phone": "LETRA_TELEFONE"
+  }
+}
+```
+
+---
+
+## Passo 3 — Coletar informacoes da planilha
 
 Pergunte ao usuario:
 
 1. **URL da planilha Google Sheets**
-2. **Nome da aba** (ex: `Mapeamento`)
-3. **A partir de qual linha processar?** (padrao: 5)
+2. **Nome da aba** (case-sensitive)
+3. **A partir de qual linha processar?** (primeira linha de dados, apos o cabecalho)
 4. **Quantos contatos processar nessa rodada?**
 
 Se o usuario informar "linha X ate linha Y", calcular limit = Y - start_row + 1.
 
 ---
 
-## Passo 3 — Executar o script
+## Passo 4 — Executar o script
 
 ```bash
 python main.py --sheet-url "URL_DA_PLANILHA" --sheet-name "NOME_DA_ABA" --start-row LINHA --limit QUANTIDADE
@@ -66,7 +90,7 @@ python main.py --sheet-url "URL_DA_PLANILHA" --sheet-name "NOME_DA_ABA" --start-
 
 ---
 
-## Passo 4 — Relatorio
+## Passo 5 — Relatorio
 
 O script exibe o relatorio automaticamente ao finalizar. Nao e necessaria nenhuma acao adicional apos a execucao.
 
@@ -79,10 +103,10 @@ O script exibe o relatorio automaticamente ao finalizar. Nao e necessaria nenhum
 | `APOLLO_API_KEY nao encontrada` | Preencher `.env` com a chave |
 | `SpreadsheetNotFound` | Verificar URL da planilha e permissao de acesso |
 | `WorksheetNotFound` | Nome da aba e case-sensitive — verificar exatamente |
-| `ModuleNotFoundError` | Rodar o pip install acima |
+| `ModuleNotFoundError` | Rodar `pip install -r requirements.txt` |
 | Rate limit (429) | O script aguarda 60s automaticamente e retenta |
-| Erro HTTP 422 | API key nao esta no header — verificar modules/apollo.py |
-| Linhas com "N.A." nao sao reprocessadas | A regra de skip bloqueia qualquer conteudo em M ou N; para reprocessar, limpar as celulas manualmente ou via script antes de rodar |
+| Erro HTTP 422 | API key nao esta no header — verificar `modules/apollo.py` |
+| Linhas ja preenchidas nao sao reprocessadas | A regra de skip bloqueia qualquer conteudo nas colunas de email ou telefone; para reprocessar, limpar as celulas antes de rodar |
 
 ---
 
