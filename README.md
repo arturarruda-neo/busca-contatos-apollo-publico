@@ -42,7 +42,7 @@ Autenticação via OAuth2 com gspread. Na primeira execução o navegador abre p
 
 ## Configuração das colunas
 
-Edite `config/config.json` para indicar quais colunas da sua planilha correspondem a cada campo:
+**Antes de rodar**, edite `config/config.json` substituindo `A`, `B` e `C` pelas letras reais das colunas da sua planilha:
 
 ```json
 {
@@ -54,13 +54,15 @@ Edite `config/config.json` para indicar quais colunas da sua planilha correspond
 }
 ```
 
-| Chave       | Descrição                                              |
-|-------------|--------------------------------------------------------|
-| `linkedin`  | Coluna que contém as URLs de LinkedIn (lida pelo script) |
-| `email`     | Coluna onde o e-mail encontrado será gravado           |
-| `phone`     | Coluna onde o telefone será gravado (sempre `N.A.`)    |
+> Os valores `A`, `B`, `C` são apenas exemplos. Você **deve** trocá-los pelas letras correspondentes na sua planilha antes de executar o script.
 
-Use a letra da coluna correspondente na sua planilha (ex: `A`, `B`, `C`, `AA`...).
+| Chave       | Descrição                                                |
+|-------------|----------------------------------------------------------|
+| `linkedin`  | Coluna que contém as URLs de LinkedIn (lida pelo script) |
+| `email`     | Coluna onde o e-mail encontrado será gravado             |
+| `phone`     | Coluna onde o telefone será gravado (sempre `N.A.`)      |
+
+Use a letra da coluna da sua planilha (ex: `D`, `E`, `F`, `AA`...).
 
 ## Como rodar
 
@@ -87,4 +89,12 @@ python main.py \
 
 ## Créditos Apollo
 
-O plano Free tem 50 créditos de exportação por mês. Cada chamada consome 1 crédito. Monitore em `app.apollo.io > Settings > Credits`.
+O consumo de créditos por chamada varia conforme o tipo de busca:
+
+- **Somente e-mail:** menor consumo por contato
+- **E-mail + telefone:** consumo maior por contato
+- **Somente telefone:** consumo intermediário por contato
+
+> Este script busca **apenas e-mail** (`reveal_personal_emails: True`). Telefone exige webhook e é sempre gravado como `N.A.`, portanto não consome créditos adicionais de telefone.
+
+O plano Free tem 50 créditos de exportação por mês. Consulte os valores exatos em `app.apollo.io > Settings > Credits` ou na [página de preços da Apollo](https://www.apollo.io/pricing), pois as taxas podem variar por plano.
